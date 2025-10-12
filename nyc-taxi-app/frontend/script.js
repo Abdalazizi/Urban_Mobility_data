@@ -5,6 +5,9 @@ let sortField = 'pickup_datetime';
 let sortOrder = 'desc';
 let tripsChart = null;
 let heatmapChart = null;
+let currentPage = 1;
+let totalPages = 1;
+const rowsPerPage = 100;
 
 // Toast notification
 function showToast(message, type = 'success') {
@@ -195,9 +198,8 @@ function updateTable(trips) {
     tbody.innerHTML = '';
     
     const sortedTrips = sortTrips(trips, sortField, sortOrder);
-    const displayTrips = sortedTrips.slice(0, 100); // Limit to 100 rows
     
-    displayTrips.forEach(trip => {
+    sortedTrips.forEach(trip => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(trip.pickup_datetime)}</td>
@@ -213,47 +215,35 @@ function updateTable(trips) {
     });
 }
 
+// Update pagination controls
+function updatePaginationControls() {
+    const pageInfo = document.getElementById('page-info');
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    const prevButton = document.getElementById('prev-page');
+    const nextButton = document.getElementById('next-page');
+
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === totalPages;
+}
+
 // Apply filters
 function applyFilters() {
-    const dateFrom = document.getElementById('date-from').value;
-    const dateTo = document.getElementById('date-to').value;
-    const minFare = parseFloat(document.getElementById('min-fare').value);
-    const maxFare = parseFloat(document.getElementById('max-fare').value);
-    const minDistance = parseFloat(document.getElementById('min-distance').value);
-    const maxDistance = parseFloat(document.getElementById('max-distance').value);
-    
-    let filtered = [...allTrips];
-    
-    if (dateFrom) {
-        filtered = filtered.filter(trip => new Date(trip.pickup_datetime) >= new Date(dateFrom));
-    }
-    if (dateTo) {
-        filtered = filtered.filter(trip => new Date(trip.pickup_datetime) <= new Date(dateTo));
-    }
-    if (!isNaN(minFare)) {
-        filtered = filtered.filter(trip => trip.fare_amount >= minFare);
-    }
-    if (!isNaN(maxFare)) {
-        filtered = filtered.filter(trip => trip.fare_amount <= maxFare);
-    }
-    if (!isNaN(minDistance)) {
-        filtered = filtered.filter(trip => trip.trip_distance >= minDistance);
-    }
-    if (!isNaN(maxDistance)) {
-        filtered = filtered.filter(trip => trip.trip_distance <= maxDistance);
-    }
-    
-    filteredTrips = filtered;
-    calculateStats(filteredTrips);
-    updateCharts(filteredTrips);
-    updateTable(filteredTrips);
-    showToast(`Filtered to ${filtered.length} trips`);
+    fetchTrips(1); // Always go to the first page when applying filters
 }
 
 // Fetch trips from backend
-async function fetchTrips() {
+async function fetchTrips(page = 1) {
     try {
-        const response = await fetch('http://localhost:5011/api/trips');
+        document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('app').classList.add('hidden');
+
+        const countResponse = await fetch('http://localhost:5011/api/trips/count');
+        const countData = await countResponse.json();
+        const totalRows = countData.count;
+        totalPages = Math.ceil(totalRows / rowsPerPage);
+
+        const response = await fetch(`http://localhost:5011/api/trips?page=${page}&limit=${rowsPerPage}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -261,10 +251,12 @@ async function fetchTrips() {
 
         allTrips = data || [];
         filteredTrips = allTrips;
+        currentPage = page;
         
         calculateStats(filteredTrips);
         updateCharts(filteredTrips);
         updateTable(filteredTrips);
+        updatePaginationControls();
         
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
@@ -278,11 +270,23 @@ async function fetchTrips() {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    fetchTrips();
+    fetchTrips(1);
     
     // Event listeners
     document.getElementById('apply-filters').addEventListener('click', applyFilters);
     
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+            fetchTrips(currentPage - 1);
+        }
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            fetchTrips(currentPage + 1);
+        }
+    });
+
     // Sort buttons
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
