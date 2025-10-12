@@ -1,3 +1,4 @@
+
 // State
 let allTrips = [];
 let filteredTrips = [];
@@ -55,10 +56,10 @@ function calculateStats(trips) {
         ? trips.reduce((sum, trip) => sum + (trip.fare_amount || 0), 0) / totalTrips 
         : 0;
 
-    document.getElementById('total-trips').textContent = totalTrips.toLocaleString();
-    document.getElementById('total-revenue').textContent = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    // document.getElementById('total-trips').textContent = totalTrips.toLocaleString(); // This will be updated separately
+    document.getElementById('total-revenue').textContent = `${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     document.getElementById('avg-distance').textContent = `${avgDistance.toFixed(2)} mi`;
-    document.getElementById('avg-fare').textContent = `$${avgFare.toFixed(2)}`;
+    document.getElementById('avg-fare').textContent = `${avgFare.toFixed(2)}`;
 }
 
 // Get hourly data
@@ -192,8 +193,8 @@ function sortTrips(trips, field, order) {
     });
 }
 
-// Update table
-function updateTable(trips) {
+// Update table view
+function updateTableView(trips) {
     const tbody = document.getElementById('trips-tbody');
     tbody.innerHTML = '';
     
@@ -209,14 +210,15 @@ function updateTable(trips) {
             <td>${calculateDuration(trip.pickup_datetime, trip.dropoff_datetime)}</td>
             <td>${(trip.trip_distance || 0).toFixed(2)} mi</td>
             <td>${trip.passenger_count}</td>
-            <td>$${(trip.fare_amount || 0).toFixed(2)}</td>
-            <td>$${(trip.tip_amount || 0).toFixed(2)}</td>
-            <td>$${((trip.fare_amount || 0) + (trip.tip_amount || 0)).toFixed(2)}</td>
+            <td>${(trip.fare_amount || 0).toFixed(2)}</td>
+            <td>${(trip.tip_amount || 0).toFixed(2)}</td>
+            <td>${((trip.fare_amount || 0) + (trip.tip_amount || 0)).toFixed(2)}</td>
             <td>${trip.payment_type === 1 ? 'Credit' : 'Cash'}</td>
         `;
         tbody.appendChild(row);
     });
 }
+
 
 // Update pagination controls
 function updatePaginationControls() {
@@ -232,20 +234,16 @@ function updatePaginationControls() {
 
 // Apply filters
 function applyFilters() {
-    fetchTrips(1); // Always go to the first page when applying filters
+    refreshTable(1); // Always go to the first page when applying filters
 }
 
-// Fetch trips from backend
-async function fetchTrips(page = 1) {
+// Fetch trips for table
+async function refreshTable(page = 1) {
+    const tableBody = document.getElementById('trips-tbody');
+    const originalHtml = tableBody.innerHTML;
+    tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+
     try {
-        document.getElementById('loading-screen').classList.remove('hidden');
-        document.getElementById('app').classList.add('hidden');
-
-        const countResponse = await fetch('http://localhost:5011/api/trips/count');
-        const countData = await countResponse.json();
-        const totalRows = countData.count;
-        totalPages = Math.ceil(totalRows / rowsPerPage);
-
         const response = await fetch(`http://localhost:5011/api/trips?page=${page}&limit=${rowsPerPage}`);
         if (!response.ok) {
 console.log("response not okay");
@@ -260,37 +258,69 @@ console.log("response not okay");
         filteredTrips = allTrips;
         currentPage = page;
         
+        updateTableView(filteredTrips);
+        updatePaginationControls();
+        
+    } catch (error) {
+        console.error('Error fetching trips:', error);
+        showToast('Failed to load trip data', 'error');
+        tableBody.innerHTML = originalHtml;
+    }
+}
+
+async function fetchTotalTrips() {
+    try {
+        const response = await fetch('http://localhost:5011/api/trips/count');
+        const data = await response.json();
+        const totalTrips = data.count;
+        totalPages = Math.ceil(totalTrips / rowsPerPage);
+        document.getElementById('total-trips').textContent = totalTrips.toLocaleString();
+    } catch (error) {
+        console.error('Error fetching total trips count:', error);
+    }
+}
+
+
+// Initial data load
+async function initialLoad() {
+    try {
+        document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('app').classList.add('hidden');
+
+        await fetchTotalTrips();
+        await refreshTable(1);
+
+        // Initial stats and charts based on the first page
         calculateStats(filteredTrips);
         updateCharts(filteredTrips);
-        updateTable(filteredTrips);
-        updatePaginationControls();
         
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
         
         showToast('Trip data loaded successfully');
     } catch (error) {
-        console.error('Error fetching trips:', error);
-        showToast('Failed to load trip data', 'error');
+        console.error('Error during initial load:', error);
+        showToast('Failed to load initial data', 'error');
     }
 }
 
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    fetchTrips(1);
+    initialLoad();
     
     // Event listeners
     document.getElementById('apply-filters').addEventListener('click', applyFilters);
     
     document.getElementById('prev-page').addEventListener('click', () => {
         if (currentPage > 1) {
-            fetchTrips(currentPage - 1);
+            refreshTable(currentPage - 1);
         }
     });
 
     document.getElementById('next-page').addEventListener('click', () => {
         if (currentPage < totalPages) {
-            fetchTrips(currentPage + 1);
+            refreshTable(currentPage + 1);
         }
     });
 
@@ -304,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sortField = field;
                 sortOrder = 'desc';
             }
-            updateTable(filteredTrips);
+            updateTableView(filteredTrips);
         });
     });
 });
