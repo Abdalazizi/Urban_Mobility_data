@@ -3,40 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Taxi Dashboard</title>
+    <title>NYC Taxi Trip Analytics</title>
+    <meta name="description" content="Enterprise-level urban mobility insights and data visualization">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <h1>NYC Taxi Trip Analysis</h1>
-    <div class="container">
-        <div class="filters">
-            <h2>Filters</h2>
-            <label for="minDistance">Min Trip Distance (miles):</label>
-            <input type="number" id="minDistance" name="minDistance" value="0" step="0.1">
-            <br><br>
-            <button id="filterBtn">Apply Filter</button>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader"></div>
+        <p>Loading trip data...</p>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="app hidden">
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+            <img src="src/assets/hero-banner.jpg" alt="Urban Mobility Analytics" class="hero-image">
+            <div class="hero-overlay">
+                <div class="container">
+                    <h1>NYC Taxi Trip Analytics</h1>
+                    <p>Enterprise-level urban mobility insights and data visualization</p>
+                </div>
+            </div>
         </div>
-        <div class="charts">
-            <canvas id="tripDistanceChart"></canvas>
-            <canvas id="passengerCountChart"></canvas>
+
+        <!-- Main Content -->
+        <div class="container main-content">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-info">
+                            <p class="stat-title">Total Trips</p>
+                            <p class="stat-value" id="total-trips">0</p>
+                            <p class="stat-trend positive">+12.5% from last period</p>
+                        </div>
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-info">
+                            <p class="stat-title">Total Revenue</p>
+                            <p class="stat-value" id="total-revenue">$0.00</p>
+                            <p class="stat-trend positive">+8.3% from last period</p>
+                        </div>
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-info">
+                            <p class="stat-title">Avg Distance</p>
+                            <p class="stat-value" id="avg-distance">0.00 mi</p>
+                            <p class="stat-trend negative">-2.1% from last period</p>
+                        </div>
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <div class="stat-info">
+                            <p class="stat-title">Avg Fare</p>
+                            <p class="stat-value" id="avg-fare">$0.00</p>
+                            <p class="stat-trend positive">+5.7% from last period</p>
+                        </div>
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="card filter-panel">
+                <div class="card-header">
+                    <h3>Filter Trips</h3>
+                </div>
+                <div class="card-content">
+                    <div class="filter-grid">
+                        <div class="input-group">
+                            <label>Date From</label>
+                            <input type="date" id="date-from">
+                        </div>
+                        <div class="input-group">
+                            <label>Date To</label>
+                            <input type="date" id="date-to">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Fare ($)</label>
+                            <input type="number" id="min-fare" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>Max Fare ($)</label>
+                            <input type="number" id="max-fare" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Distance (mi)</label>
+                            <input type="number" id="min-distance" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Max Distance (mi)</label>
+                            <input type="number" id="max-distance" step="0.1">
+                        </div>
+                    </div>
+                    <button id="apply-filters" class="btn-primary">Apply Filters</button>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Trips by Hour</h3>
+                    </div>
+                    <div class="card-content">
+                        <canvas id="trips-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Geographic Distribution</h3>
+                    </div>
+                    <div class="card-content">
+                        <canvas id="heatmap-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trips Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Trip Records</h3>
+                </div>
+                <div class="card-content">
+                    <div class="table-container">
+                        <table id="trips-table">
+                            <thead>
+                                <tr>
+                                    <th><button class="sort-btn" data-field="pickup_datetime">Pickup Time</button></th>
+                                    <th>Duration</th>
+                                    <th><button class="sort-btn" data-field="trip_distance">Distance</button></th>
+                                    <th>Passengers</th>
+                                    <th><button class="sort-btn" data-field="fare_amount">Fare</button></th>
+                                    <th>Tip</th>
+                                    <th><button class="sort-btn" data-field="total_amount">Total</button></th>
+                                    <th>Payment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trips-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="data-table">
-        <h2>Trip Data</h2>
-        <table id="tripsTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Pickup Datetime</th>
-                    <th>Trip Distance</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Data rows will be inserted here by JavaScript -->
-            </tbody>
-        </table>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="app.js"></script>
 </body>
 </html>

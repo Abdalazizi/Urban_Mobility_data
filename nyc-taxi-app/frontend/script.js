@@ -1,120 +1,305 @@
+// Initialize Supabase client
+const SUPABASE_URL = 'https://pzkylbeqwjyirwpfdiuv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6a3lsYmVxd2p5aXJ3cGZkaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4MzI5MDgsImV4cCI6MjA3NTQwODkwOH0.KsZa6y01OgfxGW-cteRVTUpCeh328ayPBv0mrF0Kwzw';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// State
 let allTrips = [];
-let tripDistanceChart = null;
-let passengerCountChart = null;
+let filteredTrips = [];
+let sortField = 'pickup_datetime';
+let sortOrder = 'desc';
+let tripsChart = null;
+let heatmapChart = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Fetch and display general trips
-    fetch('http://127.0.0.1:5011/api/trips')
-        .then(response => response.json())
-        .then(data => {
-            allTrips = data;
-            populateTable(allTrips);
-            createTripDistanceChart(allTrips);
-            createPassengerCountChart(allTrips);
-        })
-        .catch(error => console.error('Error fetching data:', error));
+// Toast notification
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.getElementById('toast-container').appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
-    // Add event listener for the filter button
-    document.getElementById('filterBtn').addEventListener('click', () => {
-        const minDistance = parseFloat(document.getElementById('minDistance').value);
-        
-        const filteredTrips = allTrips.filter(trip => trip.trip_distance >= minDistance);
-        
-        populateTable(filteredTrips);
-        createTripDistanceChart(filteredTrips);
-        createPassengerCountChart(filteredTrips);
-    });
-});
-
-function populateTable(trips) {
-    const tableBody = document.querySelector('#tripsTable tbody');
-    tableBody.innerHTML = ''; // Clear existing data
-    trips.forEach(trip => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${trip.id}</td>
-            <td>${trip.pickup_datetime}</td>
-            <td>${trip.trip_distance}</td>
-        `;
-        tableBody.appendChild(row);
+// Format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
     });
 }
 
-function createTripDistanceChart(trips) {
-    if (tripDistanceChart) {
-        tripDistanceChart.destroy();
-    }
+// Calculate duration
+function calculateDuration(pickup, dropoff) {
+    const duration = (new Date(dropoff) - new Date(pickup)) / 60000;
+    return `${Math.round(duration)} min`;
+}
 
-    const ctx = document.getElementById('tripDistanceChart').getContext('2d');
+// Calculate stats
+function calculateStats(trips) {
+    const totalTrips = trips.length;
+    const totalRevenue = trips.reduce((sum, trip) => sum + trip.total_amount, 0);
+    const avgDistance = totalTrips > 0 
+        ? trips.reduce((sum, trip) => sum + trip.trip_distance, 0) / totalTrips 
+        : 0;
+    const avgFare = totalTrips > 0 
+        ? trips.reduce((sum, trip) => sum + trip.fare_amount, 0) / totalTrips 
+        : 0;
+
+    document.getElementById('total-trips').textContent = totalTrips.toLocaleString();
+    document.getElementById('total-revenue').textContent = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    document.getElementById('avg-distance').textContent = `${avgDistance.toFixed(2)} mi`;
+    document.getElementById('avg-fare').textContent = `$${avgFare.toFixed(2)}`;
+}
+
+// Get hourly data
+function getHourlyData(trips) {
+    const hourlyMap = new Map();
     
-    tripDistanceChart = new Chart(ctx, {
+    trips.forEach(trip => {
+        const hour = new Date(trip.pickup_datetime).getHours();
+        const existing = hourlyMap.get(hour) || { trips: 0, revenue: 0 };
+        hourlyMap.set(hour, {
+            trips: existing.trips + 1,
+            revenue: existing.revenue + trip.total_amount
+        });
+    });
+
+    const data = Array.from({ length: 24 }, (_, i) => {
+        const hourData = hourlyMap.get(i) || { trips: 0, revenue: 0 };
+        return {
+            hour: `${i}:00`,
+            trips: hourData.trips,
+            revenue: Math.round(hourData.revenue)
+        };
+    });
+
+    return data;
+}
+
+// Update charts
+function updateCharts(trips) {
+    const hourlyData = getHourlyData(trips);
+    
+    // Trips chart
+    if (tripsChart) {
+        tripsChart.destroy();
+    }
+    const tripsCtx = document.getElementById('trips-chart').getContext('2d');
+    tripsChart = new Chart(tripsCtx, {
+        type: 'bar',
+        data: {
+            labels: hourlyData.map(d => d.hour),
+            datasets: [{
+                label: 'Number of Trips',
+                data: hourlyData.map(d => d.trips),
+                backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                borderColor: 'rgba(139, 92, 246, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                },
+                x: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#e2e8f0' }
+                }
+            }
+        }
+    });
+
+    // Heatmap chart (scatter plot)
+    if (heatmapChart) {
+        heatmapChart.destroy();
+    }
+    const heatmapCtx = document.getElementById('heatmap-chart').getContext('2d');
+    const scatterData = trips.slice(0, 500).map(trip => ({
+        x: trip.pickup_longitude,
+        y: trip.pickup_latitude
+    }));
+    
+    heatmapChart = new Chart(heatmapCtx, {
         type: 'scatter',
         data: {
             datasets: [{
-                label: 'Trip Distance vs. Trip Duration',
-                data: trips.map(t => ({x: t.trip_distance, y: t.trip_duration})),
-                backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                label: 'Pickup Locations',
+                data: scatterData,
+                backgroundColor: 'rgba(139, 92, 246, 0.6)',
+                pointRadius: 3
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: true,
             scales: {
-                x: {
-                    type: 'linear',
-                    position: 'bottom',
-                    title: {
-                        display: true,
-                        text: 'Trip Distance (miles)'
-                    }
-                },
                 y: {
-                    title: {
-                        display: true,
-                        text: 'Trip Duration (seconds)'
-                    }
+                    title: { display: true, text: 'Latitude', color: '#e2e8f0' },
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                },
+                x: {
+                    title: { display: true, text: 'Longitude', color: '#e2e8f0' },
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#e2e8f0' }
                 }
             }
         }
     });
 }
 
-function createPassengerCountChart(trips) {
-    if (passengerCountChart) {
-        passengerCountChart.destroy();
+// Sort trips
+function sortTrips(trips, field, order) {
+    return [...trips].sort((a, b) => {
+        let aVal = a[field];
+        let bVal = b[field];
+        
+        if (field === 'pickup_datetime') {
+            aVal = new Date(aVal).getTime();
+            bVal = new Date(bVal).getTime();
+        }
+        
+        if (order === 'asc') {
+            return aVal > bVal ? 1 : -1;
+        } else {
+            return aVal < bVal ? 1 : -1;
+        }
+    });
+}
+
+// Update table
+function updateTable(trips) {
+    const tbody = document.getElementById('trips-tbody');
+    tbody.innerHTML = '';
+    
+    const sortedTrips = sortTrips(trips, sortField, sortOrder);
+    const displayTrips = sortedTrips.slice(0, 100); // Limit to 100 rows
+    
+    displayTrips.forEach(trip => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatDate(trip.pickup_datetime)}</td>
+            <td>${calculateDuration(trip.pickup_datetime, trip.dropoff_datetime)}</td>
+            <td>${trip.trip_distance.toFixed(2)} mi</td>
+            <td>${trip.passenger_count}</td>
+            <td>$${trip.fare_amount.toFixed(2)}</td>
+            <td>$${trip.tip_amount.toFixed(2)}</td>
+            <td>$${trip.total_amount.toFixed(2)}</td>
+            <td>${trip.payment_type === 1 ? 'Credit' : 'Cash'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Apply filters
+function applyFilters() {
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    const minFare = parseFloat(document.getElementById('min-fare').value);
+    const maxFare = parseFloat(document.getElementById('max-fare').value);
+    const minDistance = parseFloat(document.getElementById('min-distance').value);
+    const maxDistance = parseFloat(document.getElementById('max-distance').value);
+    
+    let filtered = [...allTrips];
+    
+    if (dateFrom) {
+        filtered = filtered.filter(trip => new Date(trip.pickup_datetime) >= new Date(dateFrom));
     }
-
-    const ctx = document.getElementById('passengerCountChart').getContext('2d');
-
-    const passengerCounts = trips.reduce((acc, trip) => {
-        acc[trip.passenger_count] = (acc[trip.passenger_count] || 0) + 1;
-        return acc;
-    }, {});
-
-    passengerCountChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(passengerCounts),
-            datasets: [{
-                label: 'Number of Trips by Passenger Count',
-                data: Object.values(passengerCounts),
-                backgroundColor: 'rgba(153, 102, 255, 0.6)'
-            }]
-        },
-        options: {
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Passenger Count'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Number of Trips'
-                    },
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    if (dateTo) {
+        filtered = filtered.filter(trip => new Date(trip.pickup_datetime) <= new Date(dateTo));
+    }
+    if (!isNaN(minFare)) {
+        filtered = filtered.filter(trip => trip.fare_amount >= minFare);
+    }
+    if (!isNaN(maxFare)) {
+        filtered = filtered.filter(trip => trip.fare_amount <= maxFare);
+    }
+    if (!isNaN(minDistance)) {
+        filtered = filtered.filter(trip => trip.trip_distance >= minDistance);
+    }
+    if (!isNaN(maxDistance)) {
+        filtered = filtered.filter(trip => trip.trip_distance <= maxDistance);
+    }
+    
+    filteredTrips = filtered;
+    calculateStats(filteredTrips);
+    updateCharts(filteredTrips);
+    updateTable(filteredTrips);
+    showToast(`Filtered to ${filtered.length} trips`);
 }
+
+// Fetch trips from Supabase
+async function fetchTrips() {
+    try {
+        const { data, error } = await supabase
+            .from('taxi_trips')
+            .select('*')
+            .order('pickup_datetime', { ascending: false });
+
+        if (error) throw error;
+
+        allTrips = data || [];
+        filteredTrips = allTrips;
+        
+        calculateStats(filteredTrips);
+        updateCharts(filteredTrips);
+        updateTable(filteredTrips);
+        
+        document.getElementById('loading-screen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        
+        showToast('Trip data loaded successfully');
+    } catch (error) {
+        console.error('Error fetching trips:', error);
+        showToast('Failed to load trip data', 'error');
+    }
+}
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', () => {
+    fetchTrips();
+    
+    // Event listeners
+    document.getElementById('apply-filters').addEventListener('click', applyFilters);
+    
+    // Sort buttons
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const field = e.target.dataset.field;
+            if (sortField === field) {
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortField = field;
+                sortOrder = 'desc';
+            }
+            updateTable(filteredTrips);
+        });
+    });
+});
