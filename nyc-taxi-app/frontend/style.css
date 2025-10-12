@@ -328,3 +328,7 @@ tr:hover {
         grid-template-columns: 1fr;
     }
 }
+
+.text-center {
+    text-align: center;
+}
