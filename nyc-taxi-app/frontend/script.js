@@ -1,8 +1,3 @@
-// Initialize Supabase client
-const SUPABASE_URL = 'https://pzkylbeqwjyirwpfdiuv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6a3lsYmVxd2p5aXJ3cGZkaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4MzI5MDgsImV4cCI6MjA3NTQwODkwOH0.KsZa6y01OgfxGW-cteRVTUpCeh328ayPBv0mrF0Kwzw';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // State
 let allTrips = [];
 let filteredTrips = [];
@@ -255,15 +250,14 @@ function applyFilters() {
     showToast(`Filtered to ${filtered.length} trips`);
 }
 
-// Fetch trips from Supabase
+// Fetch trips from backend
 async function fetchTrips() {
     try {
-        const { data, error } = await supabase
-            .from('taxi_trips')
-            .select('*')
-            .order('pickup_datetime', { ascending: false });
-
-        if (error) throw error;
+        const response = await fetch('http://localhost:5011/api/trips');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
 
         allTrips = data || [];
         filteredTrips = allTrips;

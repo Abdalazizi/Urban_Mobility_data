@@ -17,7 +17,7 @@ def get_db_connection():
 @app.route('/api/trips', methods=['GET'])
 def get_trips():
     conn = get_db_connection()
-    trips = conn.execute('SELECT * FROM trips LIMIT 100').fetchall()
+    trips = conn.execute('SELECT * FROM trips').fetchall()
     conn.close()
     return jsonify([dict(ix) for ix in trips])
 
