@@ -16,10 +16,21 @@ def get_db_connection():
 
 @app.route('/api/trips', methods=['GET'])
 def get_trips():
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 100, type=int)
+    offset = (page - 1) * limit
+
     conn = get_db_connection()
-    trips = conn.execute('SELECT * FROM trips').fetchall()
+    trips = conn.execute('SELECT * FROM trips LIMIT ? OFFSET ?', (limit, offset)).fetchall()
     conn.close()
     return jsonify([dict(ix) for ix in trips])
+
+@app.route('/api/trips/count', methods=['GET'])
+def get_trips_count():
+    conn = get_db_connection()
+    count = conn.execute('SELECT COUNT(*) FROM trips').fetchone()[0]
+    conn.close()
+    return jsonify({'count': count})
 
 @app.route('/api/trips/ranked', methods=['GET'])
 def get_ranked_trips():
@@ -35,7 +46,7 @@ def get_ranked_trips():
     # Fetch all trips for ranking. This could be slow with large datasets.
     # In a real-world app, you'd likely paginate or sample the data.
     trips_cursor = conn.execute('SELECT * FROM trips WHERE fare_per_km IS NOT NULL AND fare_per_km > 0').fetchall()
-    conn.close()
+    conn.close()    
 
     trips_list = [dict(ix) for ix in trips_cursor]
 
@@ -50,3 +61,4 @@ if __name__ == '__main__':
     # To apply changes, the user would typically need to stop and restart it.
     # For this environment, I will assume the change is picked up.
     app.run(debug=True, port=5011)
+    print(app.url_map)
