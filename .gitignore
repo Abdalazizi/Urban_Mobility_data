@@ -3,3 +3,6 @@
 
 # Ignore log files
 *.log
+
+# Ignore db files
+*.db
