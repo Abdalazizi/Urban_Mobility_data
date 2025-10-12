@@ -44,12 +44,12 @@ function calculateDuration(pickup, dropoff) {
 // Calculate stats
 function calculateStats(trips) {
     const totalTrips = trips.length;
-    const totalRevenue = trips.reduce((sum, trip) => sum + trip.total_amount, 0);
+    const totalRevenue = trips.reduce((sum, trip) => sum + (trip.fare_amount || 0) + (trip.tip_amount || 0), 0);
     const avgDistance = totalTrips > 0 
-        ? trips.reduce((sum, trip) => sum + trip.trip_distance, 0) / totalTrips 
+        ? trips.reduce((sum, trip) => sum + (trip.trip_distance || 0), 0) / totalTrips 
         : 0;
     const avgFare = totalTrips > 0 
-        ? trips.reduce((sum, trip) => sum + trip.fare_amount, 0) / totalTrips 
+        ? trips.reduce((sum, trip) => sum + (trip.fare_amount || 0), 0) / totalTrips 
         : 0;
 
     document.getElementById('total-trips').textContent = totalTrips.toLocaleString();
@@ -67,7 +67,7 @@ function getHourlyData(trips) {
         const existing = hourlyMap.get(hour) || { trips: 0, revenue: 0 };
         hourlyMap.set(hour, {
             trips: existing.trips + 1,
-            revenue: existing.revenue + trip.total_amount
+            revenue: existing.revenue + (trip.fare_amount || 0) + (trip.tip_amount || 0)
         });
     });
 
@@ -202,11 +202,11 @@ function updateTable(trips) {
         row.innerHTML = `
             <td>${formatDate(trip.pickup_datetime)}</td>
             <td>${calculateDuration(trip.pickup_datetime, trip.dropoff_datetime)}</td>
-            <td>${trip.trip_distance.toFixed(2)} mi</td>
+            <td>${(trip.trip_distance || 0).toFixed(2)} mi</td>
             <td>${trip.passenger_count}</td>
-            <td>$${trip.fare_amount.toFixed(2)}</td>
-            <td>$${trip.tip_amount.toFixed(2)}</td>
-            <td>$${trip.total_amount.toFixed(2)}</td>
+            <td>$${(trip.fare_amount || 0).toFixed(2)}</td>
+            <td>$${(trip.tip_amount || 0).toFixed(2)}</td>
+            <td>$${((trip.fare_amount || 0) + (trip.tip_amount || 0)).toFixed(2)}</td>
             <td>${trip.payment_type === 1 ? 'Credit' : 'Cash'}</td>
         `;
         tbody.appendChild(row);
