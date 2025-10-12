@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Taxi Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>NYC Taxi Trip Analysis</h1>
+    <div class="container">
+        <div class="filters">
+            <h2>Filters</h2>
+            <label for="minDistance">Min Trip Distance (miles):</label>
+            <input type="number" id="minDistance" name="minDistance" value="0" step="0.1">
+            <br><br>
+            <button id="filterBtn">Apply Filter</button>
+        </div>
+        <div class="charts">
+            <canvas id="tripDistanceChart"></canvas>
+            <canvas id="passengerCountChart"></canvas>
+        </div>
+    </div>
+    <div class="data-table">
+        <h2>Trip Data</h2>
+        <table id="tripsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Pickup Datetime</th>
+                    <th>Trip Distance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data rows will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
