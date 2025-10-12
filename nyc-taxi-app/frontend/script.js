@@ -5,6 +5,9 @@ let sortField = 'pickup_datetime';
 let sortOrder = 'desc';
 let tripsChart = null;
 let heatmapChart = null;
+let currentPage = 1;
+let totalPages = 1;
+const rowsPerPage = 100;
 
 // Toast notification
 function showToast(message, type = 'success') {
@@ -44,12 +47,12 @@ function calculateDuration(pickup, dropoff) {
 // Calculate stats
 function calculateStats(trips) {
     const totalTrips = trips.length;
-    const totalRevenue = trips.reduce((sum, trip) => sum + trip.total_amount, 0);
+    const totalRevenue = trips.reduce((sum, trip) => sum + (trip.fare_amount || 0) + (trip.tip_amount || 0), 0);
     const avgDistance = totalTrips > 0 
-        ? trips.reduce((sum, trip) => sum + trip.trip_distance, 0) / totalTrips 
+        ? trips.reduce((sum, trip) => sum + (trip.trip_distance || 0), 0) / totalTrips 
         : 0;
     const avgFare = totalTrips > 0 
-        ? trips.reduce((sum, trip) => sum + trip.fare_amount, 0) / totalTrips 
+        ? trips.reduce((sum, trip) => sum + (trip.fare_amount || 0), 0) / totalTrips 
         : 0;
 
     document.getElementById('total-trips').textContent = totalTrips.toLocaleString();
@@ -67,7 +70,7 @@ function getHourlyData(trips) {
         const existing = hourlyMap.get(hour) || { trips: 0, revenue: 0 };
         hourlyMap.set(hour, {
             trips: existing.trips + 1,
-            revenue: existing.revenue + trip.total_amount
+            revenue: existing.revenue + (trip.fare_amount || 0) + (trip.tip_amount || 0)
         });
     });
 
@@ -195,9 +198,8 @@ function updateTable(trips) {
     tbody.innerHTML = '';
     
     const sortedTrips = sortTrips(trips, sortField, sortOrder);
-    const displayTrips = sortedTrips.slice(0, 100); // Limit to 100 rows
     
-    displayTrips.forEach(trip => {
+    sortedTrips.forEach(trip => {
         const row = document.createElement('tr');
         console.log(trip.passenger_count);
         console.log(typeof(trip.fare_amount));
@@ -205,62 +207,46 @@ function updateTable(trips) {
         row.innerHTML = `
             <td>${formatDate(trip.pickup_datetime)}</td>
             <td>${calculateDuration(trip.pickup_datetime, trip.dropoff_datetime)}</td>
-            <td>${trip.trip_distance} mi</td>
+            <td>${(trip.trip_distance || 0).toFixed(2)} mi</td>
             <td>${trip.passenger_count}</td>
-            <td>$${trip.fare_amount}</td>
-            <td>$${trip.tip_amount}</td>
-            <td>$${trip.total_amoun}</td>
+            <td>$${(trip.fare_amount || 0).toFixed(2)}</td>
+            <td>$${(trip.tip_amount || 0).toFixed(2)}</td>
+            <td>$${((trip.fare_amount || 0) + (trip.tip_amount || 0)).toFixed(2)}</td>
             <td>${trip.payment_type === 1 ? 'Credit' : 'Cash'}</td>
         `;
         tbody.appendChild(row);
     });
 }
 
+// Update pagination controls
+function updatePaginationControls() {
+    const pageInfo = document.getElementById('page-info');
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    const prevButton = document.getElementById('prev-page');
+    const nextButton = document.getElementById('next-page');
+
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === totalPages;
+}
+
 // Apply filters
 function applyFilters() {
-    const dateFrom = document.getElementById('date-from').value;
-    const dateTo = document.getElementById('date-to').value;
-    const minFare = parseFloat(document.getElementById('min-fare').value);
-    const maxFare = parseFloat(document.getElementById('max-fare').value);
-    const minDistance = parseFloat(document.getElementById('min-distance').value);
-    const maxDistance = parseFloat(document.getElementById('max-distance').value);
-    
-    let filtered = [...allTrips];
-    
-    if (dateFrom) {
-        filtered = filtered.filter(trip => new Date(trip.pickup_datetime) >= new Date(dateFrom));
-    }
-    if (dateTo) {
-        filtered = filtered.filter(trip => new Date(trip.pickup_datetime) <= new Date(dateTo));
-    }
-    if (!isNaN(minFare)) {
-        filtered = filtered.filter(trip => trip.fare_amount >= minFare);
-    }
-    if (!isNaN(maxFare)) {
-        filtered = filtered.filter(trip => trip.fare_amount <= maxFare);
-    }
-    if (!isNaN(minDistance)) {
-        filtered = filtered.filter(trip => trip.trip_distance >= minDistance);
-    }
-    if (!isNaN(maxDistance)) {
-        filtered = filtered.filter(trip => trip.trip_distance <= maxDistance);
-    }
-    
-    filteredTrips = filtered;
-    calculateStats(filteredTrips);
-    updateCharts(filteredTrips);
-    updateTable(filteredTrips);
-    showToast(`Filtered to ${filtered.length} trips`);
+    fetchTrips(1); // Always go to the first page when applying filters
 }
 
 // Fetch trips from backend
-async function fetchTrips() {
-    console.log("Begining to fetch data");
-    
+async function fetchTrips(page = 1) {
     try {
-        const response = await fetch('http://localhost:5011/api/trips');
-        console.log(response);
-        
+        document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('app').classList.add('hidden');
+
+        const countResponse = await fetch('http://localhost:5011/api/trips/count');
+        const countData = await countResponse.json();
+        const totalRows = countData.count;
+        totalPages = Math.ceil(totalRows / rowsPerPage);
+
+        const response = await fetch(`http://localhost:5011/api/trips?page=${page}&limit=${rowsPerPage}`);
         if (!response.ok) {
 console.log("response not okay");
 
@@ -272,10 +258,12 @@ console.log("response not okay");
         console.log(data)
         allTrips = data || [];
         filteredTrips = allTrips;
+        currentPage = page;
         
         calculateStats(filteredTrips);
         updateCharts(filteredTrips);
         updateTable(filteredTrips);
+        updatePaginationControls();
         
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
@@ -289,13 +277,23 @@ console.log("response not okay");
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("I am going to fetch on load");
-    
-    fetchTrips();
+    fetchTrips(1);
     
     // Event listeners
     document.getElementById('apply-filters').addEventListener('click', applyFilters);
     
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+            fetchTrips(currentPage - 1);
+        }
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            fetchTrips(currentPage + 1);
+        }
+    });
+
     // Sort buttons
     document.querySelectorAll('.sort-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
