@@ -199,14 +199,17 @@ function updateTable(trips) {
     
     displayTrips.forEach(trip => {
         const row = document.createElement('tr');
+        console.log(trip.passenger_count);
+        console.log(typeof(trip.fare_amount));
+        
         row.innerHTML = `
             <td>${formatDate(trip.pickup_datetime)}</td>
             <td>${calculateDuration(trip.pickup_datetime, trip.dropoff_datetime)}</td>
-            <td>${trip.trip_distance.toFixed(2)} mi</td>
+            <td>${trip.trip_distance} mi</td>
             <td>${trip.passenger_count}</td>
-            <td>$${trip.fare_amount.toFixed(2)}</td>
-            <td>$${trip.tip_amount.toFixed(2)}</td>
-            <td>$${trip.total_amount.toFixed(2)}</td>
+            <td>$${trip.fare_amount}</td>
+            <td>$${trip.tip_amount}</td>
+            <td>$${trip.total_amoun}</td>
             <td>${trip.payment_type === 1 ? 'Credit' : 'Cash'}</td>
         `;
         tbody.appendChild(row);
@@ -252,13 +255,21 @@ function applyFilters() {
 
 // Fetch trips from backend
 async function fetchTrips() {
+    console.log("Begining to fetch data");
+    
     try {
         const response = await fetch('http://localhost:5011/api/trips');
+        console.log(response);
+        
         if (!response.ok) {
+console.log("response not okay");
+
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        console.log("response was okay here");
+        
         const data = await response.json();
-
+        console.log(data)
         allTrips = data || [];
         filteredTrips = allTrips;
         
@@ -278,6 +289,8 @@ async function fetchTrips() {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("I am going to fetch on load");
+    
     fetchTrips();
     
     // Event listeners
