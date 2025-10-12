@@ -1,7 +1,7 @@
 // Initialize Supabase client
-const SUPABASE_URL = 'https://pzkylbeqwjyirwpfdiuv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6a3lsYmVxd2p5aXJ3cGZkaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4MzI5MDgsImV4cCI6MjA3NTQwODkwOH0.KsZa6y01OgfxGW-cteRVTUpCeh328ayPBv0mrF0Kwzw';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// const SUPABASE_URL = 'https://pzkylbeqwjyirwpfdiuv.supabase.co';
+// const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6a3lsYmVxd2p5aXJ3cGZkaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4MzI5MDgsImV4cCI6MjA3NTQwODkwOH0.KsZa6y01OgfxGW-cteRVTUpCeh328ayPBv0mrF0Kwzw';
+// const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // State
 let allTrips = [];
@@ -258,12 +258,20 @@ function applyFilters() {
 // Fetch trips from Supabase
 async function fetchTrips() {
     try {
-        const { data, error } = await supabase
-            .from('taxi_trips')
-            .select('*')
-            .order('pickup_datetime', { ascending: false });
+        // Fetch data from backend API
+        const response = await fetch('http://localhost:5011/api/trips');
 
-        if (error) throw error;
+        // Check if the request was successful
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+
+        // Parse the JSON data from the response
+        const data = await response.json();
+
+        // NOTE: The original code sorted data via the API call.
+        // If your new API doesn't sort the data, you can sort it here.
+        data.sort((a, b) => new Date(b.pickup_datetime) - new Date(a.pickup_datetime));
 
         allTrips = data || [];
         filteredTrips = allTrips;
