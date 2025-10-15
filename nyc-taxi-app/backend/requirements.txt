@@ -1,4 +1,4 @@
 flask
 pandas
 flask-cors
-geopy
+# geopy
