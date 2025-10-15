@@ -192,7 +192,7 @@ function sortTrips(trips, field, order) {
     });
 }
 
-// Update table view
+
 function updateTableView(trips) {
     const tbody = document.getElementById('trips-tbody');
     tbody.innerHTML = '';
@@ -219,7 +219,7 @@ function updateTableView(trips) {
 }
 
 
-// Update pagination controls
+
 function updatePaginationControls() {
     const pageInfo = document.getElementById('page-info');
     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
@@ -316,7 +316,7 @@ async function initialLoad() {
         await fetchTotalTrips();
         await refreshTable(1);
 
-        // Initial stats and charts based on the first page
+
         calculateStats(filteredTrips);
         updateCharts(filteredTrips);
         

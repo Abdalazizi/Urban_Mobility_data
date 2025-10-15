@@ -15,7 +15,7 @@ body {
     display: none !important;
 }
 
-/* Loading Screen */
+
 .loading-screen {
     display: flex;
     flex-direction: column;
@@ -38,7 +38,7 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Hero Banner */
+
 .hero-banner {
     position: relative;
     height: 16rem;
@@ -70,7 +70,7 @@ body {
     color: #cbd5e1;
 }
 
-/* Container */
+
 .container {
     max-width: 1400px;
     margin: 0 auto;
@@ -84,7 +84,7 @@ body {
     gap: 2rem;
 }
 
-/* Stats Grid */
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -146,7 +146,7 @@ body {
     color: #8b5cf6;
 }
 
-/* Card */
+
 .card {
     background: rgba(30, 41, 59, 0.8);
     border: 1px solid rgba(139, 92, 246, 0.2);
@@ -168,7 +168,7 @@ body {
     padding: 1.5rem;
 }
 
-/* Filter Panel */
+
 .filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -221,7 +221,7 @@ input:focus {
     background: #7c3aed;
 }
 
-/* Charts Grid */
+
 .charts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -232,7 +232,7 @@ canvas {
     max-height: 300px;
 }
 
-/* Table */
+
 .table-container {
     overflow-x: auto;
 }
@@ -277,7 +277,7 @@ tr:hover {
     background: rgba(139, 92, 246, 0.05);
 }
 
-/* Toast */
+
 .toast-container {
     position: fixed;
     bottom: 2rem;
@@ -310,7 +310,7 @@ tr:hover {
     border-left: 4px solid #ef4444;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
     .hero-banner h1 {
         font-size: 2rem;
@@ -333,7 +333,7 @@ tr:hover {
     text-align: center;
 }
 
-/* Pagination */
+
 .pagination-controls {
     display: flex;
     justify-content: center;

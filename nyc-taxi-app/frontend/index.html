@@ -1,28 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC Taxi Trip Analytics</title>
-    <meta name="description" content="Enterprise-level urban mobility insights and data visualization">
+    <meta name="description" content="">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-    <!-- Loading Screen -->
+
     <div id="loading-screen" class="loading-screen">
         <div class="loader"></div>
         <p>Loading trip data...</p>
     </div>
 
-    <!-- Main App -->
+
     <div id="app" class="app hidden">
-        <!-- Hero Banner -->
+
         <div class="hero-banner">
-            <!-- <img src="src/assets/hero-banner.jpg" alt="Urban Mobility Analytics" class="hero-image"> -->
+
             <div class="hero-overlay">
                 <div class="container">
                     <h1>NYC Taxi Trip Analytics</h1>
@@ -31,9 +29,9 @@
             </div>
         </div>
 
-        <!-- Main Content -->
+
         <div class="container main-content">
-            <!-- Stats Cards -->
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-content">
@@ -110,7 +108,7 @@
                 </div>
             </div>
 
-            <!-- Filter Panel -->
+
             <div class="card filter-panel">
                 <div class="card-header">
                     <h3>Filter Trips</h3>
@@ -146,7 +144,7 @@
                 </div>
             </div>
 
-            <!-- Charts Row -->
+
             <div class="charts-grid">
                 <div class="card">
                     <div class="card-header">
@@ -166,7 +164,7 @@
                 </div>
             </div>
 
-            <!-- Trips Table -->
+
             <div class="card">
                 <div class="card-header">
                     <h3>Trip Records</h3>
@@ -200,7 +198,7 @@
         </div>
     </div>
 
-    <!-- Toast Container -->
+
     <div id="toast-container" class="toast-container"></div>
 
     <script src="script.js"></script>

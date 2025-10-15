@@ -1,15 +1,15 @@
 import sqlite3
 import os
-
+ 
 def create_database():
     # Correctly locate the database file in the backend directory
     script_dir = os.path.dirname(os.path.realpath(__file__))
     db_file = os.path.join(script_dir, 'taxi_trips.db')
-
+ 
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
-
-    # Create table
+ 
+    # Create trips table
     c.execute('''
         CREATE TABLE IF NOT EXISTS trips (
             id TEXT,
@@ -32,11 +32,20 @@ def create_database():
     ''')
     # Add a UNIQUE constraint on the id column to use it as a primary key
     c.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_trips_id ON trips (id)')
-
-
+ 
+    # --- NEW ---
+    # Create vendors table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS vendors (
+            id INTEGER PRIMARY KEY,
+            fullname TEXT NOT NULL
+        )
+    ''')
+    # --- END NEW ---
+ 
     conn.commit()
     conn.close()
-    print("Database and table created successfully.")
-
+    print("Database and tables (trips, vendors) created successfully.")
+ 
 if __name__ == '__main__':
     create_database()
