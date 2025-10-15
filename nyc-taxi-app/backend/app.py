@@ -20,15 +20,86 @@ def get_trips():
     limit = request.args.get('limit', 100, type=int)
     offset = (page - 1) * limit
 
+    # Filter parameters
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    min_fare = request.args.get('min_fare', type=float)
+    max_fare = request.args.get('max_fare', type=float)
+    min_distance = request.args.get('min_distance', type=float)
+    max_distance = request.args.get('max_distance', type=float)
+
+    query = 'SELECT * FROM trips'
+    filters = []
+    params = []
+
+    if date_from:
+        filters.append('pickup_datetime >= ?')
+        params.append(date_from)
+    if date_to:
+        filters.append('pickup_datetime <= ?')
+        params.append(date_to)
+    if min_fare is not None:
+        filters.append('fare_amount >= ?')
+        params.append(min_fare)
+    if max_fare is not None:
+        filters.append('fare_amount <= ?')
+        params.append(max_fare)
+    if min_distance is not None:
+        filters.append('trip_distance >= ?')
+        params.append(min_distance)
+    if max_distance is not None:
+        filters.append('trip_distance <= ?')
+        params.append(max_distance)
+
+    if filters:
+        query += ' WHERE ' + ' AND '.join(filters)
+
+    query += ' LIMIT ? OFFSET ?'
+    params.extend([limit, offset])
+
     conn = get_db_connection()
-    trips = conn.execute('SELECT * FROM trips LIMIT ? OFFSET ?', (limit, offset)).fetchall()
+    trips = conn.execute(query, tuple(params)).fetchall()
     conn.close()
     return jsonify([dict(ix) for ix in trips])
 
 @app.route('/api/trips/count', methods=['GET'])
 def get_trips_count():
+    # Filter parameters
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    min_fare = request.args.get('min_fare', type=float)
+    max_fare = request.args.get('max_fare', type=float)
+    min_distance = request.args.get('min_distance', type=float)
+    max_distance = request.args.get('max_distance', type=float)
+
+    query = 'SELECT COUNT(*) FROM trips'
+    filters = []
+    params = []
+
+    if date_from:
+        filters.append('pickup_datetime >= ?')
+        params.append(date_from)
+    if date_to:
+        filters.append('pickup_datetime <= ?')
+        params.append(date_to)
+    if min_fare is not None:
+        filters.append('fare_amount >= ?')
+        params.append(min_fare)
+    if max_fare is not None:
+        filters.append('fare_amount <= ?')
+        params.append(max_fare)
+    if min_distance is not None:
+        filters.append('trip_distance >= ?')
+        params.append(min_distance)
+    if max_distance is not None:
+        filters.append('trip_distance <= ?')
+        params.append(max_distance)
+
+    if filters:
+        query += ' WHERE ' + ' AND '.join(filters)
+
     conn = get_db_connection()
-    count = conn.execute('SELECT COUNT(*) FROM trips').fetchone()[0]
+    count = conn.execute(query, tuple(params)).fetchone()[0]
     conn.close()
     return jsonify({'count': count})
 

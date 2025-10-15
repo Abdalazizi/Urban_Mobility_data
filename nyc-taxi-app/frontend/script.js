@@ -1,4 +1,3 @@
-
 // State
 let allTrips = [];
 let filteredTrips = [];
@@ -57,9 +56,9 @@ function calculateStats(trips) {
         : 0;
 
     // document.getElementById('total-trips').textContent = totalTrips.toLocaleString(); // This will be updated separately
-    document.getElementById('total-revenue').textContent = `${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    document.getElementById('total-revenue').textContent = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     document.getElementById('avg-distance').textContent = `${avgDistance.toFixed(2)} mi`;
-    document.getElementById('avg-fare').textContent = `${avgFare.toFixed(2)}`;
+    document.getElementById('avg-fare').textContent = `$${avgFare.toFixed(2)}`;
 }
 
 // Get hourly data
@@ -210,9 +209,9 @@ function updateTableView(trips) {
             <td>${calculateDuration(trip.pickup_datetime, trip.dropoff_datetime)}</td>
             <td>${(trip.trip_distance || 0).toFixed(2)} mi</td>
             <td>${trip.passenger_count}</td>
-            <td>${(trip.fare_amount || 0).toFixed(2)}</td>
-            <td>${(trip.tip_amount || 0).toFixed(2)}</td>
-            <td>${((trip.fare_amount || 0) + (trip.tip_amount || 0)).toFixed(2)}</td>
+            <td>$${(trip.fare_amount || 0).toFixed(2)}</td>
+            <td>$${(trip.tip_amount || 0).toFixed(2)}</td>
+            <td>$${((trip.fare_amount || 0) + (trip.tip_amount || 0)).toFixed(2)}</td>
             <td>${trip.payment_type === 1 ? 'Credit' : 'Cash'}</td>
         `;
         tbody.appendChild(row);
@@ -232,9 +231,30 @@ function updatePaginationControls() {
     nextButton.disabled = currentPage === totalPages;
 }
 
+// Get filter values
+function getFilterQuery() {
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    const minFare = document.getElementById('min-fare').value;
+    const maxFare = document.getElementById('max-fare').value;
+    const minDistance = document.getElementById('min-distance').value;
+    const maxDistance = document.getElementById('max-distance').value;
+
+    const params = new URLSearchParams();
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    if (minFare) params.append('min_fare', minFare);
+    if (maxFare) params.append('max_fare', maxFare);
+    if (minDistance) params.append('min_distance', minDistance);
+    if (maxDistance) params.append('max_distance', maxDistance);
+
+    return params.toString();
+}
+
 // Apply filters
 function applyFilters() {
-    refreshTable(1); // Always go to the first page when applying filters
+    fetchTotalTrips();
+    refreshTable(1);
 }
 
 // Fetch trips for table
@@ -243,8 +263,11 @@ async function refreshTable(page = 1) {
     const originalHtml = tableBody.innerHTML;
     tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
 
+    const filterQuery = getFilterQuery();
+    const query = `?page=${page}&limit=${rowsPerPage}&${filterQuery}`;
+
     try {
-        const response = await fetch(`http://localhost:5011/api/trips?page=${page}&limit=${rowsPerPage}`);
+        const response = await fetch(`http://localhost:5011/api/trips${query}`);
         if (!response.ok) {
 console.log("response not okay");
 
@@ -269,8 +292,11 @@ console.log("response not okay");
 }
 
 async function fetchTotalTrips() {
+    const filterQuery = getFilterQuery();
+    const query = `?${filterQuery}`;
+
     try {
-        const response = await fetch('http://localhost:5011/api/trips/count');
+        const response = await fetch(`http://localhost:5011/api/trips/count${query}`);
         const data = await response.json();
         const totalTrips = data.count;
         totalPages = Math.ceil(totalTrips / rowsPerPage);
