@@ -18,7 +18,7 @@ def haversine_distance(lon1, lat1, lon2, lat2):
     c = 2 * math.asin(math.sqrt(a))
     r = 3956 # Radius of earth in miles.
     return c * r
- 
+
 # --- NEW FUNCTION ---
 def populate_vendors(conn, csv_file):
     """
@@ -31,7 +31,7 @@ def populate_vendors(conn, csv_file):
         1: 'Vendor_1',
         2: 'Vendor_2'
     }
- 
+
     try:
         # Efficiently read only the 'vendor_id' column to find unique values
         vendor_ids = pd.read_csv(csv_file, usecols=['vendor_id']).squeeze('columns').unique()
@@ -41,7 +41,7 @@ def populate_vendors(conn, csv_file):
             (int(vid), vendor_mapping.get(int(vid), f'Unknown_Vendor_{int(vid)}'))
             for vid in vendor_ids if pd.notna(vid)
         ]
- 
+
         if vendors_to_insert:
             c = conn.cursor()
             # Use 'INSERT OR IGNORE' to safely insert without creating duplicates
@@ -51,7 +51,7 @@ def populate_vendors(conn, csv_file):
     except Exception as e:
         print(f"Could not populate vendors table: {e}")
 # --- END NEW FUNCTION ---
- 
+
 def clean_and_insert_data(chunk, conn):
     script_dir = os.path.dirname(os.path.realpath(__file__))
     log_file = os.path.join(script_dir, 'excluded_records.log')
@@ -66,7 +66,7 @@ def clean_and_insert_data(chunk, conn):
         ),
         axis=1
     )
- 
+
     # (The rest of this function remains unchanged)
     
     # Identify records to be excluded
@@ -81,7 +81,7 @@ def clean_and_insert_data(chunk, conn):
  
     # Identify invalid trip data (duration or distance <= 0)
     invalid_mask = (non_null_chunk['trip_duration'] <= 0) | (non_null_chunk['trip_distance'] <= 0)
- 
+
     # Log records that will be dropped
     with open(log_file, 'a', encoding='utf-8') as f:
         # Log nulls
@@ -146,7 +146,7 @@ def clean_and_insert_data(chunk, conn):
         chunk.to_sql('trips', conn, if_exists='append', index=False)
     except sqlite3.IntegrityError:
         pass
- 
+
 def process_data():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     csv_file = os.path.join(script_dir, '..', '..', 'train.csv')
@@ -174,7 +174,7 @@ def process_data():
  
     conn.close()
     print("Data processing complete.")
- 
+
 if __name__ == '__main__':
     # First, ensure the database and table are created
     script_dir = os.path.dirname(os.path.realpath(__file__))
