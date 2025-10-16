@@ -2,10 +2,6 @@
 
 This is a full-stack web application for analyzing and visualizing the NYC Taxi Trip dataset. It provides a user-friendly interface to filter, sort, and explore taxi trip data, offering insights into trip durations, distances, fares, and popular pickup locations.
 
-## Live Demo
-
-[Link to a live demo of the application]
-
 ## Features
 
 ### Frontend
@@ -236,6 +232,12 @@ Contributions are what make the open-source community such an amazing place to l
 3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4.  Push to the Branch (`git push origin feature/AmazingFeature`)
 5.  Open a Pull Request
+
+## Contributors
+
+*   **Abdalaziz** - [https://github.com/Abdalazizi](https://github.com/Abdalazizi)
+*   **Flavia** - [https://github.com/Flaviaa4](https://github.com/Flaviaa4)
+*   **Muvunyi** - [https://github.com/itmuvunyi/](https://github.com/itmuvunyi/)
 
 ## License
 
