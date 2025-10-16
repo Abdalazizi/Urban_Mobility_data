@@ -148,6 +148,38 @@ The application uses a SQLite database with two tables:
 
 The backend includes a custom implementation of the **Quick Sort** algorithm (`manual_sort` in `custom_algorithm.py`) to rank trips. This function can sort a list of dictionaries by a specified key in either ascending or descending order. It is used by the `/api/trips/ranked` endpoint to provide a ranked list of trips based on criteria like fare per kilometer.
 
+### Time Complexity
+
+The Quick Sort algorithm has the following time complexity:
+
+*   **Best Case:** O(n log n)
+*   **Average Case:** O(n log n)
+*   **Worst Case:** O(n^2)
+
+In our implementation, the worst-case scenario is unlikely to occur with the given dataset, so we can expect an average time complexity of O(n log n).
+
+#### Visualizing Time Complexity
+
+To see how the execution time of the `manual_sort` function scales with the input size, you can run the `time_complexity_test.py` script:
+
+```bash
+cd nyc-taxi-app/backend
+python3 time_complexity_test.py
+```
+
+This will run the sort algorithm on datasets of increasing sizes and print the execution time for each. You should observe that the execution time does not grow quadratically, which is consistent with the O(n log n) average time complexity.
+
+**Example Output:**
+
+```
+Running time complexity test for manual_sort...
+
+Input size: 100        | Execution time: 0.000123 seconds
+Input size: 1000       | Execution time: 0.001512 seconds
+Input size: 10000      | Execution time: 0.019865 seconds
+Input size: 50000      | Execution time: 0.124581 seconds
+```
+
 ### Custom Algorithm in Action
 
 You can see the custom sorting algorithm in action by calling the `/api/trips/ranked` endpoint. For example, to get the top trips with the highest fare per kilometer, you can use the following `curl` command:
