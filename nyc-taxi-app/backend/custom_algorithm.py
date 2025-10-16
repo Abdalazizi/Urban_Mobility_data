@@ -2,7 +2,7 @@ def _partition(arr, low, high, key, descending):
     pivot_index = low
     pivot_value = arr[pivot_index][key]
     
-    # Move pivot to the end to work with the rest of the array
+    
     arr[pivot_index], arr[high] = arr[high], arr[pivot_index]
     
     store_index = low
@@ -16,7 +16,7 @@ def _partition(arr, low, high, key, descending):
                 arr[i], arr[store_index] = arr[store_index], arr[i]
                 store_index += 1
     
-    # Move pivot back to its final sorted place
+    
     arr[store_index], arr[high] = arr[high], arr[store_index]
     return store_index
 
@@ -41,7 +41,7 @@ def manual_sort(data, key, descending=False):
     if not data:
         return []
 
-    # Create a copy to avoid modifying the original list in place
+    
     data_copy = list(data)
     
     _quick_sort_recursive(data_copy, 0, len(data_copy) - 1, key, descending)

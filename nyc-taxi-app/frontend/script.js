@@ -1,4 +1,4 @@
-// State
+
 let allTrips = [];
 let filteredTrips = [];
 let sortField = 'pickup_datetime';
@@ -38,13 +38,13 @@ function formatDate(dateString) {
     });
 }
 
-// Calculate duration
+
 function calculateDuration(pickup, dropoff) {
     const duration = (new Date(dropoff) - new Date(pickup)) / 60000;
     return `${Math.round(duration)} min`;
 }
 
-// Calculate stats
+
 function calculateStats(trips) {
     const totalTrips = trips.length;
     const totalRevenue = trips.reduce((sum, trip) => sum + (trip.fare_amount || 0) + (trip.tip_amount || 0), 0);
@@ -55,13 +55,13 @@ function calculateStats(trips) {
         ? trips.reduce((sum, trip) => sum + (trip.fare_amount || 0), 0) / totalTrips 
         : 0;
 
-    // document.getElementById('total-trips').textContent = totalTrips.toLocaleString(); // This will be updated separately
+   
     document.getElementById('total-revenue').textContent = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     document.getElementById('avg-distance').textContent = `${avgDistance.toFixed(2)} mi`;
     document.getElementById('avg-fare').textContent = `$${avgFare.toFixed(2)}`;
 }
 
-// Get hourly data
+
 function getHourlyData(trips) {
     const hourlyMap = new Map();
     
@@ -86,11 +86,11 @@ function getHourlyData(trips) {
     return data;
 }
 
-// Update charts
+
 function updateCharts(trips) {
     const hourlyData = getHourlyData(trips);
     
-    // Trips chart
+    
     if (tripsChart) {
         tripsChart.destroy();
     }
@@ -129,7 +129,7 @@ function updateCharts(trips) {
         }
     });
 
-    // Heatmap chart (scatter plot)
+    
     if (heatmapChart) {
         heatmapChart.destroy();
     }
@@ -173,7 +173,7 @@ function updateCharts(trips) {
     });
 }
 
-// Sort trips
+
 function sortTrips(trips, field, order) {
     return [...trips].sort((a, b) => {
         let aVal = a[field];
@@ -231,7 +231,7 @@ function updatePaginationControls() {
     nextButton.disabled = currentPage === totalPages;
 }
 
-// Get filter values
+
 function getFilterQuery() {
     const dateFrom = document.getElementById('date-from').value;
     const dateTo = document.getElementById('date-to').value;

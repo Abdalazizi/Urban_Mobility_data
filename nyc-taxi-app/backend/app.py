@@ -19,8 +19,8 @@ def get_trips():
     page = request.args.get('page', 1, type=int)
     limit = request.args.get('limit', 100, type=int)
     offset = (page - 1) * limit
- 
-    # Filter parameters
+
+    
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     min_fare = request.args.get('min_fare', type=float)
@@ -64,7 +64,7 @@ def get_trips():
  
 @app.route('/api/trips/count', methods=['GET'])
 def get_trips_count():
-    # Filter parameters
+    
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     min_fare = request.args.get('min_fare', type=float)
@@ -114,23 +114,19 @@ def get_ranked_trips():
     descending = (order == 'desc')
  
     conn = get_db_connection()
-    # Fetch all trips for ranking. This could be slow with large datasets.
-    # In a real-world app, you'd likely paginate or sample the data.
+   
     trips_cursor = conn.execute('SELECT * FROM trips WHERE fare_per_km IS NOT NULL AND fare_per_km > 0').fetchall()
     conn.close()    
  
     trips_list = [dict(ix) for ix in trips_cursor]
- 
-    # Use the custom manual_sort function
+
+    
     ranked_trips = manual_sort(trips_list, key=sort_by, descending=descending)
- 
-    # Return the top 100 ranked trips
+
     return jsonify(ranked_trips[:100])
  
 if __name__ == '__main__':
-    # The server is already running as a background process.
-    # To apply changes, the user would typically need to stop and restart it.
-    # For this environment, I will assume the change is picked up.
+   
     app.run(debug=True, port=5011)
     print(app.url_map)
  

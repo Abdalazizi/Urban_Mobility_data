@@ -2,17 +2,17 @@ import sqlite3
 import os
  
 def create_database():
-    # Correctly locate the database file in the backend directory
+   
     script_dir = os.path.dirname(os.path.realpath(__file__))
     db_file = os.path.join(script_dir, 'taxi_trips.db')
  
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
 
-    # --- NEW: Tell SQLite to enforce foreign key constraints ---
+    
     c.execute('PRAGMA foreign_keys = ON;')
 
-    # --- First, ensure the vendors table exists so trips can reference it ---
+    
     c.execute('''
         CREATE TABLE IF NOT EXISTS vendors (
             id INTEGER PRIMARY KEY,
@@ -20,7 +20,6 @@ def create_database():
         )
     ''')
     
-    # --- MODIFIED: Added the FOREIGN KEY constraint to the trips table ---
     c.execute('''
         CREATE TABLE IF NOT EXISTS trips (
             id TEXT,
