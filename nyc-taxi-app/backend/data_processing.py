@@ -2,7 +2,7 @@ import pandas as pd
 import sqlite3
 import os
 import math
-
+ 
 def haversine_distance(lon1, lat1, lon2, lat2):
     """
     Calculate the great-circle distance between two points
@@ -148,11 +148,11 @@ def process_data():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     csv_file = os.path.join(script_dir, '..', '..', 'train.csv')
     db_file = os.path.join(script_dir, 'taxi_trips.db')
-
+ 
     if not os.path.exists(csv_file):
         print(f"Error: {csv_file} not found.")
         return
-
+ 
     conn = sqlite3.connect(db_file)
     
     
@@ -167,13 +167,14 @@ def process_data():
         clean_and_insert_data(chunk, conn)
         total_rows += len(chunk)
         print(f"Processed chunk {i+1}, total rows processed: {total_rows}")
-
+ 
     conn.close()
     print("Data processing complete.")
 
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.realpath(__file__))
     db_script_path = os.path.join(script_dir, 'database.py')
+    os.system(f'python {db_script_path}')
     os.system(f'python {db_script_path}')
     
     process_data()

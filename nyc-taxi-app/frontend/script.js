@@ -201,6 +201,9 @@ function updateTableView(trips) {
     
     sortedTrips.forEach(trip => {
         const row = document.createElement('tr');
+        console.log(trip.passenger_count);
+        console.log(typeof(trip.fare_amount));
+        
         row.innerHTML = `
             <td>${formatDate(trip.pickup_datetime)}</td>
             <td>${calculateDuration(trip.pickup_datetime, trip.dropoff_datetime)}</td>
@@ -266,10 +269,14 @@ async function refreshTable(page = 1) {
     try {
         const response = await fetch(`http://localhost:5011/api/trips${query}`);
         if (!response.ok) {
+console.log("response not okay");
+
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        console.log("response was okay here");
+        
         const data = await response.json();
-
+        console.log(data)
         allTrips = data || [];
         filteredTrips = allTrips;
         currentPage = page;
@@ -309,7 +316,7 @@ async function initialLoad() {
         await fetchTotalTrips();
         await refreshTable(1);
 
-        // Initial stats and charts based on the first page
+
         calculateStats(filteredTrips);
         updateCharts(filteredTrips);
         
