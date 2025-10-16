@@ -85,7 +85,7 @@ To get a local copy up and running, follow these simple steps.
     ```bash
     python3 app.py &
     ```
-    The backend server will be running at `http://127.0.0.1:5001`.
+    The backend server will be running at `http://127.0.0.1:5011`.
 
 ### Frontend Setup
 
@@ -185,7 +185,7 @@ Input size: 50000      | Execution time: 0.124581 seconds
 You can see the custom sorting algorithm in action by calling the `/api/trips/ranked` endpoint. For example, to get the top trips with the highest fare per kilometer, you can use the following `curl` command:
 
 ```bash
-curl "http://127.0.0.1:5001/api/trips/ranked?sort_by=fare_per_km&order=desc"
+curl "http://127.0.0.1:5011/api/trips/ranked?sort_by=fare_per_km&order=desc"
 ```
 
 This will return a JSON response with the top 100 trips, sorted by `fare_per_km` in descending order. Here is a sample of the output:
