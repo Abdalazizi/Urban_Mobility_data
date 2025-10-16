@@ -1,11 +1,11 @@
 import sqlite3
 import os
-
+ 
 def create_database():
    
     script_dir = os.path.dirname(os.path.realpath(__file__))
     db_file = os.path.join(script_dir, 'taxi_trips.db')
-
+ 
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
 

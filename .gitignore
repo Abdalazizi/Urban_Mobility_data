@@ -6,3 +6,5 @@
 
 # Ignore db files
 *.db
+__pycache__/
+*.pyc
