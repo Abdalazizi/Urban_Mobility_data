@@ -107,12 +107,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap; 
 }
 
 .stat-info {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    flex: 1;
 }
 
 .stat-title {
@@ -229,12 +231,15 @@ input:focus {
 }
 
 canvas {
+    max-width: 100%;
+    height: auto;
     max-height: 300px;
 }
 
 
 .table-container {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -311,7 +316,21 @@ tr:hover {
 }
 
 
+@media (max-width: 1024px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .main-content {
+        padding: 1.5rem 1rem;
+    }
+}
+
 @media (max-width: 768px) {
+    .hero-banner {
+        height: 12rem; 
+    }
+
     .hero-banner h1 {
         font-size: 2rem;
     }
@@ -326,6 +345,48 @@ tr:hover {
     
     .filter-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.75rem; 
+    }
+
+    .main-content {
+        padding: 1rem 0.75rem;
+        gap: 1.5rem; 
+    }
+
+    .stat-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem; 
+    }
+
+    .stat-icon {
+        margin-top: 0.5rem; 
+    }
+
+    .toast-container {
+        bottom: 1rem;
+        right: 0.5rem;
+        left: 0.5rem;
+        align-items: center;
+    }
+
+    .toast {
+        width: 90%; 
+        max-width: 350px;
+    }
+
+    .hero-overlay > .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 }
 
