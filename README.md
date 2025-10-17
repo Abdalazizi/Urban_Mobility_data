@@ -216,6 +216,7 @@ This will return a JSON response with the top 100 trips, sorted by `fare_per_km`
     "pickup_longitude": -73.982155,
     "tip_amount": 0.0,
     "trip_distance": 4.0,
+.
     "trip_duration": 451,
     "trip_speed": 32.0,
     "vendor_id": 1
@@ -242,3 +243,9 @@ Contributions are what make the open-source community such an amazing place to l
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for more information.
+
+## Additional Resources
+
+*   [YouTube Video](https://www.youtube.com/watch?v=lV9y-BT0Hv8)
+*   [Architecture Analysis PDF](./architecture_analysis.pdf)
+*   [NYC Taxi Trip Analytics Dashboard PDF](./NYC%20Taxi%20Trip%20Analytics%20Dashboard%20(1).pdf)
